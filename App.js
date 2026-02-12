@@ -12,6 +12,8 @@ import InterviewScreen from './src/screens/InterviewScreen';
 import InterviewReviewScreen from './src/screens/InterviewReviewScreen';
 import YearCompareScreen from './src/screens/YearCompareScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import BalloonRunCaptureScreen from './src/screens/BalloonRunCaptureScreen';
+import BalloonRunViewScreen from './src/screens/BalloonRunViewScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +59,16 @@ export default function App() {
           name="YearCompare"
           component={YearCompareScreen}
           options={{ title: 'Compare Years' }}
+        />
+        <Stack.Screen
+          name="BalloonRunCapture"
+          component={BalloonRunCaptureScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="BalloonRunView"
+          component={BalloonRunViewScreen}
+          options={{ title: 'Balloon Run' }}
         />
         <Stack.Screen
           name="Settings"

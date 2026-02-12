@@ -3,6 +3,7 @@ import { FileSystem } from './native-modules';
 
 const CHILDREN_KEY = '@birthday_interview_children';
 const INTERVIEWS_KEY = '@birthday_interview_sessions';
+const BALLOON_RUNS_KEY = '@berfdayy_balloon_runs';
 
 // ─── Children ───
 
@@ -31,6 +32,21 @@ export async function deleteChild(childId) {
   await AsyncStorage.setItem(
     INTERVIEWS_KEY,
     JSON.stringify(interviews.filter((i) => i.childId !== childId))
+  );
+  // Also remove their balloon runs + video files
+  const balloonRuns = await getBalloonRuns();
+  const childRuns = balloonRuns.filter((r) => r.childId === childId);
+  for (const run of childRuns) {
+    if (run.videoUri && FileSystem) {
+      try {
+        const info = await FileSystem.getInfoAsync(run.videoUri);
+        if (info.exists) await FileSystem.deleteAsync(run.videoUri);
+      } catch (e) { console.warn('Could not delete balloon run video:', e); }
+    }
+  }
+  await AsyncStorage.setItem(
+    BALLOON_RUNS_KEY,
+    JSON.stringify(balloonRuns.filter((r) => r.childId !== childId))
   );
 }
 
@@ -70,10 +86,59 @@ export async function deleteInterview(interviewId) {
   );
 }
 
+// ─── Balloon Runs ───
+
+export async function getBalloonRuns() {
+  const json = await AsyncStorage.getItem(BALLOON_RUNS_KEY);
+  return json ? JSON.parse(json) : [];
+}
+
+export async function getBalloonRunsForChild(childId) {
+  const all = await getBalloonRuns();
+  return all.filter((r) => r.childId === childId).sort((a, b) => b.year - a.year);
+}
+
+export async function saveBalloonRun(run) {
+  const runs = await getBalloonRuns();
+  const idx = runs.findIndex((r) => r.id === run.id);
+  if (idx >= 0) runs[idx] = run;
+  else runs.push(run);
+  await AsyncStorage.setItem(BALLOON_RUNS_KEY, JSON.stringify(runs));
+  return runs;
+}
+
+export async function updateBalloonRun(runId, updates) {
+  const runs = await getBalloonRuns();
+  const idx = runs.findIndex((r) => r.id === runId);
+  if (idx >= 0) {
+    runs[idx] = { ...runs[idx], ...updates };
+    await AsyncStorage.setItem(BALLOON_RUNS_KEY, JSON.stringify(runs));
+  }
+  return runs;
+}
+
+export async function deleteBalloonRun(runId) {
+  const runs = await getBalloonRuns();
+  const target = runs.find((r) => r.id === runId);
+  if (target?.videoUri && FileSystem) {
+    try {
+      const info = await FileSystem.getInfoAsync(target.videoUri);
+      if (info.exists) await FileSystem.deleteAsync(target.videoUri);
+    } catch (e) { console.warn('Could not delete balloon run video:', e); }
+  }
+  await AsyncStorage.setItem(
+    BALLOON_RUNS_KEY,
+    JSON.stringify(runs.filter((r) => r.id !== runId))
+  );
+}
+
 // ─── Video Storage ───
 
 export const VIDEO_DIR = FileSystem
   ? `${FileSystem.documentDirectory}interview-videos/`
+  : '';
+export const BALLOON_VIDEO_DIR = FileSystem
+  ? `${FileSystem.documentDirectory}balloon-run-videos/`
   : '';
 
 export async function moveVideoToStorage(tempUri, filename) {
@@ -85,6 +150,15 @@ export async function moveVideoToStorage(tempUri, filename) {
   return dest;
 }
 
+export async function moveVideoToBalloonStorage(tempUri, filename) {
+  if (!FileSystem) throw new Error('File system not available on this platform');
+  const info = await FileSystem.getInfoAsync(BALLOON_VIDEO_DIR);
+  if (!info.exists) await FileSystem.makeDirectoryAsync(BALLOON_VIDEO_DIR, { intermediates: true });
+  const dest = `${BALLOON_VIDEO_DIR}${filename}`;
+  await FileSystem.moveAsync({ from: tempUri, to: dest });
+  return dest;
+}
+
 // ─── Backup ───
 
 export async function exportAllData() {
@@ -92,10 +166,12 @@ export async function exportAllData() {
     exportDate: new Date().toISOString(),
     children: await getChildren(),
     interviews: await getInterviews(),
+    balloonRuns: await getBalloonRuns(),
   };
 }
 
 export async function importData(data) {
   if (data.children) await AsyncStorage.setItem(CHILDREN_KEY, JSON.stringify(data.children));
   if (data.interviews) await AsyncStorage.setItem(INTERVIEWS_KEY, JSON.stringify(data.interviews));
+  if (data.balloonRuns) await AsyncStorage.setItem(BALLOON_RUNS_KEY, JSON.stringify(data.balloonRuns));
 }

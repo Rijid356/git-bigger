@@ -15,6 +15,7 @@ import { COLORS, SIZES } from '../utils/theme';
 import {
   getChildren,
   getInterviews,
+  getBalloonRuns,
   exportAllData,
   importData,
 } from '../utils/storage';
@@ -22,6 +23,7 @@ import {
 export default function SettingsScreen() {
   const [childCount, setChildCount] = useState(0);
   const [interviewCount, setInterviewCount] = useState(0);
+  const [balloonRunCount, setBalloonRunCount] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importText, setImportText] = useState('');
@@ -32,8 +34,10 @@ export default function SettingsScreen() {
       async function loadCounts() {
         const children = await getChildren();
         const interviews = await getInterviews();
+        const balloonRuns = await getBalloonRuns();
         setChildCount(children.length);
         setInterviewCount(interviews.length);
+        setBalloonRunCount(balloonRuns.length);
       }
       loadCounts();
     }, [])
@@ -71,23 +75,25 @@ export default function SettingsScreen() {
     setImporting(true);
     try {
       const data = JSON.parse(trimmed);
-      if (!data.children && !data.interviews) {
+      if (!data.children && !data.interviews && !data.balloonRuns) {
         Alert.alert(
           'Invalid Data',
-          'The JSON does not contain children or interviews data.'
+          'The JSON does not contain children, interviews, or balloon run data.'
         );
         return;
       }
       await importData(data);
       const children = await getChildren();
       const interviews = await getInterviews();
+      const balloonRuns = await getBalloonRuns();
       setChildCount(children.length);
       setInterviewCount(interviews.length);
+      setBalloonRunCount(balloonRuns.length);
       setImportText('');
       setShowImport(false);
       Alert.alert(
         'Import Successful',
-        `Imported ${children.length} children and ${interviews.length} interviews.`
+        `Imported ${children.length} children, ${interviews.length} interviews, and ${balloonRuns.length} balloon runs.`
       );
     } catch (e) {
       Alert.alert(
@@ -117,6 +123,12 @@ export default function SettingsScreen() {
           <Text style={styles.statEmoji}>🎂</Text>
           <Text style={styles.statLabel}>Interviews</Text>
           <Text style={styles.statValue}>{interviewCount}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.statRow}>
+          <Text style={styles.statEmoji}>🎈</Text>
+          <Text style={styles.statLabel}>Balloon Runs</Text>
+          <Text style={styles.statValue}>{balloonRunCount}</Text>
         </View>
       </View>
 

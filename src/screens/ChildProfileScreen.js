@@ -13,6 +13,8 @@ import {
   getChildren,
   getInterviewsForChild,
   deleteInterview,
+  getBalloonRunsForChild,
+  deleteBalloonRun,
 } from '../utils/storage';
 
 function calculateAge(birthday) {
@@ -43,6 +45,7 @@ export default function ChildProfileScreen({ route, navigation }) {
   const { childId } = route.params;
   const [child, setChild] = useState(null);
   const [interviews, setInterviews] = useState([]);
+  const [balloonRuns, setBalloonRuns] = useState([]);
 
   const loadData = useCallback(async () => {
     const allChildren = await getChildren();
@@ -51,6 +54,9 @@ export default function ChildProfileScreen({ route, navigation }) {
 
     const childInterviews = await getInterviewsForChild(childId);
     setInterviews(childInterviews);
+
+    const childBalloonRuns = await getBalloonRunsForChild(childId);
+    setBalloonRuns(childBalloonRuns);
   }, [childId]);
 
   useFocusEffect(
@@ -58,6 +64,24 @@ export default function ChildProfileScreen({ route, navigation }) {
       loadData();
     }, [loadData])
   );
+
+  const handleDeleteBalloonRun = (run) => {
+    Alert.alert(
+      'Delete Balloon Run',
+      `Are you sure you want to delete the ${run.year} balloon run? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteBalloonRun(run.id);
+            loadData();
+          },
+        },
+      ]
+    );
+  };
 
   const handleDeleteInterview = (interview) => {
     Alert.alert(
@@ -134,7 +158,21 @@ export default function ChildProfileScreen({ route, navigation }) {
           <Text style={styles.primaryButtonText}>Start Interview</Text>
         </TouchableOpacity>
 
-        {interviews.length >= 2 && (
+        <TouchableOpacity
+          style={styles.balloonRunButton}
+          onPress={() =>
+            navigation.navigate('BalloonRunCapture', {
+              childId: child.id,
+              childName: child.name,
+            })
+          }
+        >
+          <Text style={styles.balloonRunButtonText}>Balloon Run</Text>
+        </TouchableOpacity>
+      </View>
+
+      {interviews.length >= 2 && (
+        <View style={styles.actionsSecondary}>
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={() =>
@@ -143,8 +181,8 @@ export default function ChildProfileScreen({ route, navigation }) {
           >
             <Text style={styles.secondaryButtonText}>Compare Years</Text>
           </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      )}
 
       {/* Section Title */}
       <View style={styles.sectionHeader}>
@@ -180,6 +218,54 @@ export default function ChildProfileScreen({ route, navigation }) {
             <Text style={styles.emptyText}>
               Start your first one to capture this year's memories.
             </Text>
+          </View>
+        }
+        ListFooterComponent={
+          <View>
+            {/* Balloon Runs Section */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Balloon Runs</Text>
+              {balloonRuns.length > 0 && (
+                <Text style={styles.sectionCount}>
+                  {balloonRuns.length} run{balloonRuns.length !== 1 ? 's' : ''}
+                </Text>
+              )}
+            </View>
+            {balloonRuns.length === 0 ? (
+              <View style={styles.emptyBalloon}>
+                <Text style={{ fontSize: 36 }}>🎈</Text>
+                <Text style={styles.emptyBalloonText}>
+                  No balloon runs yet. Capture one on their birthday!
+                </Text>
+              </View>
+            ) : (
+              balloonRuns.map((run) => (
+                <TouchableOpacity
+                  key={run.id}
+                  style={styles.balloonRunCard}
+                  onPress={() =>
+                    navigation.navigate('BalloonRunView', { balloonRunId: run.id })
+                  }
+                  onLongPress={() => handleDeleteBalloonRun(run)}
+                >
+                  <View style={styles.balloonRunCardLeft}>
+                    <Text style={styles.balloonRunYear}>{run.year}</Text>
+                    <View style={styles.balloonRunAgeBadge}>
+                      <Text style={styles.balloonRunAgeBadgeText}>Age {run.age}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.interviewCardCenter}>
+                    <Text style={styles.interviewDate}>
+                      {formatInterviewDate(run.createdAt)}
+                    </Text>
+                    <Text style={styles.interviewQuestionCount}>
+                      {run.playbackRate}x slow-mo
+                    </Text>
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
         }
         contentContainerStyle={styles.listContent}
@@ -270,6 +356,26 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: SIZES.base,
     fontWeight: '700',
+  },
+  balloonRunButton: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: SIZES.radiusFull,
+    shadowColor: COLORS.accentDark,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  balloonRunButtonText: {
+    color: COLORS.white,
+    fontSize: SIZES.base,
+    fontWeight: '700',
+  },
+  actionsSecondary: {
+    alignItems: 'center',
+    paddingBottom: SIZES.padding,
   },
   secondaryButton: {
     backgroundColor: COLORS.surface,
@@ -383,5 +489,56 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 24,
+  },
+
+  // Balloon Run Cards
+  balloonRunCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: SIZES.radiusLg,
+    padding: SIZES.padding,
+    marginHorizontal: SIZES.padding,
+    marginBottom: SIZES.paddingSm,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.accent,
+  },
+  balloonRunCardLeft: {
+    alignItems: 'center',
+    marginRight: SIZES.padding,
+  },
+  balloonRunYear: {
+    fontSize: SIZES.xl,
+    fontWeight: '800',
+    color: COLORS.accentDark,
+  },
+  balloonRunAgeBadge: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: SIZES.radiusFull,
+    marginTop: 4,
+  },
+  balloonRunAgeBadgeText: {
+    fontSize: SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.accentDark,
+  },
+  emptyBalloon: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: SIZES.paddingLg,
+  },
+  emptyBalloonText: {
+    fontSize: SIZES.md,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
   },
 });

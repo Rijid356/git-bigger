@@ -39,7 +39,13 @@
           "savePhotosPermission": "Allow Berfdayy to save interview videos."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Berfdayy to access your photo library to select balloon run videos."
+        }
+      ]
     ]
   }
 }
