@@ -63,7 +63,7 @@ export default function SettingsScreen() {
     try {
       const data = await exportAllData();
       const fileUri =
-        FileSystem.documentDirectory + 'berfdayy-backup.json';
+        FileSystem.documentDirectory + 'git-bigger-backup.json';
       await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data, null, 2));
       await Sharing.shareAsync(fileUri, {
         mimeType: 'application/json',
@@ -302,7 +302,7 @@ export default function SettingsScreen() {
       {/* ─── App Info ─── */}
       <Text style={styles.sectionHeader}>About</Text>
       <View style={styles.card}>
-        <Text style={styles.appName}>Berfdayy</Text>
+        <Text style={styles.appName}>git-bigger</Text>
         <Text style={styles.appVersion}>Version 1.0.0</Text>
         <Text style={styles.appDescription}>
           Record annual birthday interviews with your children. Ask the same

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Berfdayy",
-    "slug": "berfdayy",
+    "name": "git-bigger",
+    "slug": "git-bigger",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
       "adaptiveIcon": {
         "backgroundColor": "#FF6B8A"
       },
-      "package": "com.ryandonnelly.berfdayy",
+      "package": "com.ryandonnelly.gitbigger",
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
@@ -27,23 +27,23 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Berfdayy to access your camera to record interview videos.",
-          "microphonePermission": "Allow Berfdayy to access your microphone to record audio during interviews.",
+          "cameraPermission": "Allow git-bigger to access your camera to record interview videos.",
+          "microphonePermission": "Allow git-bigger to access your microphone to record audio during interviews.",
           "recordAudioAndroid": true
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow Berfdayy to save videos to your photo library.",
-          "savePhotosPermission": "Allow Berfdayy to save interview videos."
+          "photosPermission": "Allow git-bigger to save videos to your photo library.",
+          "savePhotosPermission": "Allow git-bigger to save interview videos."
         }
       ],
       "expo-asset",
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Berfdayy to access your photo library to select balloon run videos."
+          "photosPermission": "Allow git-bigger to access your photo library to select balloon run videos."
         }
       ]
     ]

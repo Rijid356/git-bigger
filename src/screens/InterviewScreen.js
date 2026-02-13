@@ -268,7 +268,7 @@ export default function InterviewScreen({ route, navigation }) {
             {/* Info section overlaid at bottom */}
             <View style={styles.introOverlay}>
               <Text style={styles.introTitle}>
-                {childName}'s Berfdayy Interview
+                {childName}'s git-bigger Interview
               </Text>
               <Text style={styles.introInstructions}>
                 Record your birthday interview! The camera will record continuously

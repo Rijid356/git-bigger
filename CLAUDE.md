@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Berfdayy** — A React Native (Expo) mobile app for recording annual birthday interviews with children. Parents ask questions each year while recording a continuous video. The video IS the interview — no text answer entry. Old interviews with text answers are still displayed for backward compatibility.
+**git-bigger** — A React Native (Expo) mobile app for recording annual birthday interviews with children. Parents ask questions each year while recording a continuous video. The video IS the interview — no text answer entry. Old interviews with text answers are still displayed for backward compatibility.
 
 ## Commands
 

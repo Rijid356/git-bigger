@@ -33,7 +33,7 @@ export default function App() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: '🎂 Berfdayy' }}
+          options={{ title: '🎂 git-bigger' }}
         />
         <Stack.Screen
           name="AddChild"

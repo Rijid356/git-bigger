@@ -1,7 +1,7 @@
 # Project Stats
 
 ## Overview
-- **Project:** Berfdayy
+- **Project:** git-bigger
 - **Started:** 2026-02-09
 - **Last Active:** 2026-02-12
 - **Tech Stack:** JavaScript, React Native, Expo SDK 54, Playwright
