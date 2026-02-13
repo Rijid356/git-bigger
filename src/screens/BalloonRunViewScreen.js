@@ -78,13 +78,39 @@ export default function BalloonRunViewScreen({ route, navigation }) {
 
   async function handleSaveToCameraRoll() {
     if (!run?.videoUri) return;
+
+    // Try MediaLibrary first (works on iOS), fall back to Sharing on Android
+    if (MediaLibrary) {
+      try {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          await MediaLibrary.createAssetAsync(run.videoUri);
+          Alert.alert('Saved', 'Video saved to your camera roll.');
+          return;
+        }
+      } catch (e) {
+        console.warn('MediaLibrary save failed, falling back to share sheet:', e);
+      }
+    }
+
+    // Fallback: use share sheet
     try {
       const available = await Sharing.isAvailableAsync();
       if (!available) {
-        Alert.alert('Sharing Unavailable', 'Sharing is not available on this device.');
+        Alert.alert('Error', 'Could not save the video. Sharing is not available on this device.');
         return;
       }
-      await Sharing.shareAsync(run.videoUri, { mimeType: 'video/mp4', dialogTitle: 'Save Video' });
+      Alert.alert(
+        'Save Video',
+        'Choose "Save to device" or "Downloads" from the share menu to save this video.',
+        [{ text: 'OK', onPress: async () => {
+          try {
+            await Sharing.shareAsync(run.videoUri, { mimeType: 'video/mp4', dialogTitle: 'Save Video' });
+          } catch (shareErr) {
+            console.warn('Share error:', shareErr);
+          }
+        }}]
+      );
     } catch (e) {
       console.warn('Save video error:', e);
       Alert.alert('Error', `Could not save the video.\n\n${e.message || 'Unknown error'}`);
@@ -179,7 +205,7 @@ export default function BalloonRunViewScreen({ route, navigation }) {
       {/* Action Buttons */}
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.actionButton} onPress={handleSaveToCameraRoll}>
-          <Text style={styles.actionButtonText}>Save Video</Text>
+          <Text style={styles.actionButtonText}>Save to Camera Roll</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
           <Text style={styles.actionButtonText}>Share</Text>

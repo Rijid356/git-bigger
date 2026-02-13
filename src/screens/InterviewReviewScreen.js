@@ -250,42 +250,68 @@ export default function InterviewReviewScreen({ route, navigation }) {
   });
 
   async function handleSaveToLibrary() {
-    // expo-media-library has a bug on Android where both saveToLibraryAsync and
-    // createAssetAsync insert into MediaStore.Images instead of MediaStore.Video,
-    // rejecting video/mp4. Use Sharing as a reliable alternative — the Android
-    // share sheet lets users save to Files, Gallery, Google Drive, etc.
-    if (!Sharing) return;
-    try {
-      const available = await Sharing.isAvailableAsync();
-      if (!available) {
-        Alert.alert('Sharing Unavailable', 'Sharing is not available on this device.');
+    // Verify the source video still exists on disk
+    if (FileSystem && interview.videoUri) {
+      const fileInfo = await FileSystem.getInfoAsync(interview.videoUri);
+      if (!fileInfo.exists) {
+        Alert.alert('Video Not Found', 'The video file is missing from storage. It may have been deleted.');
         return;
       }
+    }
 
-      // Verify the source video still exists on disk
-      if (FileSystem && interview.videoUri) {
-        const fileInfo = await FileSystem.getInfoAsync(interview.videoUri);
-        if (!fileInfo.exists) {
-          Alert.alert('Video Not Found', 'The video file is missing from storage. It may have been deleted.');
+    let videoUri = interview.videoUri;
+    if (child?.name != null && interview.age != null) {
+      try {
+        videoUri = await copyVideoWithFriendlyName(interview.videoUri, child.name, interview.age);
+      } catch (copyErr) {
+        console.warn('Friendly name copy failed, using original:', copyErr);
+        videoUri = interview.videoUri;
+      }
+    }
+
+    // Try MediaLibrary first (works on iOS), fall back to Sharing on Android
+    // where expo-media-library has a bug inserting videos into MediaStore.Images
+    if (MediaLibrary) {
+      try {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          await MediaLibrary.createAssetAsync(videoUri);
+          await cleanupTempShareFiles().catch(() => {});
+          Alert.alert('Saved!', 'Video saved to your camera roll.');
           return;
         }
+      } catch (e) {
+        console.warn('MediaLibrary save failed, falling back to share sheet:', e);
+        // Fall through to Sharing fallback
       }
+    }
 
-      let videoUri = interview.videoUri;
-      if (child?.name != null && interview.age != null) {
-        try {
-          videoUri = await copyVideoWithFriendlyName(interview.videoUri, child.name, interview.age);
-        } catch (copyErr) {
-          console.warn('Friendly name copy failed, using original:', copyErr);
-          videoUri = interview.videoUri;
+    // Fallback: use share sheet (reliable on all platforms)
+    if (Sharing) {
+      try {
+        const available = await Sharing.isAvailableAsync();
+        if (!available) {
+          Alert.alert('Error', 'Could not save the video. Sharing is not available on this device.');
+          await cleanupTempShareFiles().catch(() => {});
+          return;
         }
+        Alert.alert(
+          'Save Video',
+          'Choose "Save to device" or "Downloads" from the share menu to save this video.',
+          [{ text: 'OK', onPress: async () => {
+            try {
+              await Sharing.shareAsync(videoUri, { mimeType: 'video/mp4', dialogTitle: 'Save Interview Video' });
+            } catch (shareErr) {
+              console.warn('Share error:', shareErr);
+            }
+            await cleanupTempShareFiles().catch(() => {});
+          }}]
+        );
+      } catch (e) {
+        console.warn('Save/share error:', e);
+        await cleanupTempShareFiles().catch(() => {});
+        Alert.alert('Error', `Could not save the video.\n\n${e.message || 'Unknown error'}`);
       }
-      await Sharing.shareAsync(videoUri, { mimeType: 'video/mp4', dialogTitle: 'Save Interview Video' });
-      await cleanupTempShareFiles().catch(() => {});
-    } catch (e) {
-      console.warn('Save to library error:', e);
-      await cleanupTempShareFiles().catch(() => {});
-      Alert.alert('Error', `Could not save the video.\n\n${e.message || 'Unknown error'}`);
     }
   }
 
@@ -401,7 +427,7 @@ export default function InterviewReviewScreen({ route, navigation }) {
       {interview.videoUri && videoExists && (
         <View style={styles.videoActions}>
           <TouchableOpacity testID="button-save-video" style={styles.actionButton} onPress={handleSaveToLibrary}>
-            <Text style={styles.actionButtonText}>Save Video</Text>
+            <Text style={styles.actionButtonText}>Save to Camera Roll</Text>
           </TouchableOpacity>
           <TouchableOpacity testID="button-share-video" style={styles.actionButton} onPress={handleShare}>
             <Text style={styles.actionButtonText}>Share</Text>
