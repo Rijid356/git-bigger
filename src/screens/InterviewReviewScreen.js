@@ -424,7 +424,6 @@ export default function InterviewReviewScreen({ route, navigation }) {
         status={transcriptionStatus}
         error={transcriptionError}
         onRetry={() => handleTranscribe(apiKeys)}
-        onSetup={() => navigation.navigate('Settings')}
       />
 
       {/* Spotify Card */}

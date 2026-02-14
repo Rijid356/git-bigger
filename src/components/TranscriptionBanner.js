@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { COLORS, SIZES } from '../utils/theme';
 
-export default function TranscriptionBanner({ status, error, onRetry, onSetup }) {
+export default function TranscriptionBanner({ status, error, onRetry }) {
   if (status === 'completed') {
     return (
       <View style={[styles.banner, styles.completedBanner]}>
@@ -44,19 +44,14 @@ export default function TranscriptionBanner({ status, error, onRetry, onSetup })
     );
   }
 
-  // no_key / pending — prompt to set up
+  // no_key / pending — prompt to add key in .env
   return (
     <View style={[styles.banner, styles.setupBanner]}>
       <Text style={styles.bannerIcon}>🔑</Text>
       <View style={styles.bannerContent}>
-        <Text style={[styles.bannerTitle, { color: COLORS.warning }]}>Set Up API Keys</Text>
-        <Text style={styles.bannerSub}>Add your OpenAI key in Settings to auto-transcribe</Text>
+        <Text style={[styles.bannerTitle, { color: COLORS.warning }]}>OpenAI Key Missing</Text>
+        <Text style={styles.bannerSub}>Add EXPO_PUBLIC_OPENAI_KEY to your .env file and restart</Text>
       </View>
-      {onSetup && (
-        <TouchableOpacity style={styles.setupButton} onPress={onSetup}>
-          <Text style={styles.setupText}>Setup</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 }
@@ -105,17 +100,6 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radiusFull,
   },
   retryText: {
-    color: COLORS.white,
-    fontSize: SIZES.sm,
-    fontWeight: '700',
-  },
-  setupButton: {
-    backgroundColor: COLORS.warning,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: SIZES.radiusFull,
-  },
-  setupText: {
     color: COLORS.white,
     fontSize: SIZES.sm,
     fontWeight: '700',
