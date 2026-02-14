@@ -346,6 +346,16 @@ export async function deleteProfilePhoto(childId) {
   }
 }
 
+// ─── API Keys (from environment variables) ───
+
+export function getApiKeys() {
+  return {
+    openaiKey: process.env.EXPO_PUBLIC_OPENAI_KEY || '',
+    spotifyClientId: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID || '',
+    spotifyClientSecret: process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_SECRET || '',
+  };
+}
+
 // ─── Backup ───
 
 export async function exportAllData() {
